@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Subject {
+struct Subject: Equatable {
     var name: String
     var grade: String
 }
@@ -76,7 +76,7 @@ class MyCreditManager {
         }
         let (name, subjectName, subjectGrade) = (inputs[0], inputs[1], inputs[2])
         if students[name] == nil {
-            print("\(name) 학생은 없습니다")
+            print("\(name) 학생을 찾지 못했습니다.")
         } else {
             students[name]?.append(Subject(name: subjectName, grade: subjectGrade))
             print("\(name) 학생의 \(subjectName) 과목이 \(subjectGrade)로 추가(변경)되었습니다.")
@@ -84,6 +84,25 @@ class MyCreditManager {
     }
     
     private func deleteGrade() {
+        print("성적을 삭제할 학생의 이름, 과목 이름을 띄어쓰기로 구분하여 차례로 작성해주세요.")
+        print("입력예) Mickey Swift")
+        let inputs = (readLine() ?? " ").components(separatedBy: " ")
+        guard inputs.count == 2 else {
+            print("입력이 잘못되었습니다. 다시 확인해주세요.")
+            return
+        }
+        let (name, subjectName) = (inputs[0], inputs[1])
+        if students[name] != nil {
+            if let i = students[name]?.firstIndex(where: { $0.name == subjectName }) {
+                students[name]?.remove(at: i)
+                print(i)
+                print("\(name) 학생의 \(subjectName) 과목의 성적이 삭제되었습니다.")
+            }else {
+                print("\(name) 학생의 \(subjectName) 과목의 성적은 찾지 못했습니다.")
+            }
+        } else {
+            print("\(name) 학생을 찾지 못했습니다.")
+        }
     }
     
     private func checkGrade() {
