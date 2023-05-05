@@ -41,17 +41,17 @@ class MyCreditManager {
     private func addStudent() {
         print("추가할 학생의 이름을 입력해주세요.")
         let name = readLine() ?? " "
-        if name.contains(" ") {
-            print("입력이 잘못되었습니다. 다시 확인해주세요.")
-        } else {
-            if students[name] == nil {
-                students[name] = []
-                print("\(name) 학생을 추가했습니다.")
-            } else {
-                print("\(name)은 이미 존재하는 학생입니다. 추가하지 않습니다.")
-            }
-        }
         
+        guard !name.contains(" ") else {
+            print("입력이 잘못되었습니다. 다시 확인해주세요.")
+            return
+        }
+        guard students[name] == nil else {
+            print("\(name)은 이미 존재하는 학생입니다. 추가하지 않습니다.")
+            return
+        }
+        students[name] = []
+        print("\(name) 학생을 추가했습니다.")
     }
     
     private func deleteStudent() {
@@ -92,47 +92,48 @@ class MyCreditManager {
             return
         }
         let (name, subjectName) = (inputs[0], inputs[1])
-        if students[name] != nil {
-            if let i = students[name]?.firstIndex(where: { $0.name == subjectName }) {
-                students[name]?.remove(at: i)
-                print(i)
-                print("\(name) 학생의 \(subjectName) 과목의 성적이 삭제되었습니다.")
-            }else {
-                print("\(name) 학생의 \(subjectName) 과목의 성적은 찾지 못했습니다.")
-            }
-        } else {
+        
+        guard students[name] != nil else {
             print("\(name) 학생을 찾지 못했습니다.")
+            return
         }
+        guard let index = students[name]?.firstIndex(where: {$0.name == subjectName}) else {
+            print("\(name) 학생의 \(subjectName) 과목의 성적은 찾지 못했습니다.")
+            return
+        }
+        students[name]?.remove(at: index)
+        print("\(name) 학생의 \(subjectName) 과목의 성적이 삭제되었습니다.")
     }
     
     private func checkGrade() {
+        var sum = 0.0
+        
         print("평점을 알고싶은 학생의 이름을 입력해주세요.")
         let name = readLine() ?? " "
-        if name.contains(" ") {
+        guard !name.contains(" ") else {
             print("입력이 잘못되었습니다. 다시 확인해주세요.")
-        } else {
-            if let student = students[name] {
-                var sum = 0.0
-                for subject in student {
-                    print("\(subject.name): \(subject.grade)")
-                    switch subject.grade {
-                    case "A+": sum += 4.5
-                    case "A" : sum += 4.0
-                    case "B+": sum += 3.5
-                    case "B" : sum += 3.0
-                    case "C+": sum += 2.5
-                    case "C" : sum += 2.0
-                    case "D+": sum += 1.5
-                    case "D" : sum += 1.0
-                    default  : sum += 0.0
-                    }
-                }
-                let str = String(format: "%.2f", sum / Double(student.count))
-                print("평점 : \(str)")
-            } else {
-                print("\(name) 학생을 찾지 못했습니다.")
+            return
+        }
+        guard let student = students[name] else {
+            print("\(name) 학생을 찾지 못했습니다.")
+            return
+        }
+        for subject in student {
+            print("\(subject.name): \(subject.grade)")
+            switch subject.grade {
+            case "A+": sum += 4.5
+            case "A" : sum += 4.0
+            case "B+": sum += 3.5
+            case "B" : sum += 3.0
+            case "C+": sum += 2.5
+            case "C" : sum += 2.0
+            case "D+": sum += 1.5
+            case "D" : sum += 1.0
+            default  : sum += 0.0
             }
         }
+        let str = String(format: "%.2f", sum / Double(student.count))
+        print("평점 : \(str)")
    }
     
     private func warnWrongMenu() {
@@ -146,5 +147,4 @@ class MyCreditManager {
 }
 
 MyCreditManager().run()
-
 
