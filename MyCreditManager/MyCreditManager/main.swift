@@ -57,12 +57,11 @@ class MyCreditManager {
     private func deleteStudent() {
         print("삭제할 학생의 이름을 입력해주세요.")
         let name = readLine() ?? " "
-        if students[name] == nil {
-            print("\(name) 학생을 찾지 못했습니다.")
-        } else {
-            students[name] = nil
-            print("\(name) 학생을 삭제하였습니다.")
+        guard students[name] != nil else {
+            return
         }
+        students[name] = nil
+        print("\(name) 학생을 삭제하였습니다.")
     }
     
     private func updateGrade() {
@@ -75,12 +74,12 @@ class MyCreditManager {
             return
         }
         let (name, subjectName, subjectGrade) = (inputs[0], inputs[1], inputs[2])
-        if students[name] == nil {
+        guard students[name] != nil else {
             print("\(name) 학생을 찾지 못했습니다.")
-        } else {
-            students[name]?.append(Subject(name: subjectName, grade: subjectGrade))
-            print("\(name) 학생의 \(subjectName) 과목이 \(subjectGrade)로 추가(변경)되었습니다.")
+            return
         }
+        students[name]?.append(Subject(name: subjectName, grade: subjectGrade))
+        print("\(name) 학생의 \(subjectName) 과목이 \(subjectGrade)로 추가(변경)되었습니다.")
     }
     
     private func deleteGrade() {
