@@ -32,12 +32,27 @@ enum InformText: CustomStringConvertible {
     case requestDeleteStudentName
     case completeDeleteStudent(name: String)
     
+    case requestUpdateGrade
+    case completeUpdateGrade(name: String, subject: Subject)
+    
     var description: String {
         switch self {
-        case .requestAddStudentName: return "추가할 학생의 이름을 입력해주세요."
-        case .completeAddStudent(let name): return "\(name) 학생을 추가했습니다."
-        case .requestDeleteStudentName: return "삭제할 학생의 이름을 입력해주세요."
-        case .completeDeleteStudent(let name): return "\(name) 학생을 삭제하였습니다."
+        case .requestAddStudentName:
+            return "추가할 학생의 이름을 입력해주세요."
+        case .completeAddStudent(let name):
+            return "\(name) 학생을 추가했습니다."
+        case .requestDeleteStudentName:
+            return "삭제할 학생의 이름을 입력해주세요."
+        case .completeDeleteStudent(let name):
+            return "\(name) 학생을 삭제하였습니다."
+        case .requestUpdateGrade:
+            return """
+성적을 추가할 학생의 이름, 과목 이름, 성적(A+, A, F 등)을 띄어쓰기로 구분하여 차례로 작성해주세요.
+입력예) Mickey Swift A+
+만약에 학생의 성적 중 해당 과목이 존재하면 기존 점수가 갱신됩니다.
+"""
+        case .completeUpdateGrade(let name, let subject):
+            return "\(name) 학생의 \(subject.name) 과목이 \(subject.grade)로 추가(변경)되었습니다."
         }
     }
 }
@@ -58,7 +73,10 @@ class MyCreditManager {
                 do { try deleteStudent() } catch {
                     print(error)
                 }
-            case "3" : updateGrade()
+            case "3" :
+                do { try updateGrade() } catch {
+                    print(error)
+                }
             case "4" : deleteGrade()
             case "5" : checkGrade()
             case "X" : exitProgram()
@@ -104,22 +122,22 @@ class MyCreditManager {
         print(InformText.completeDeleteStudent(name: name))
     }
     
-    private func updateGrade() {
-        print("성적을 추가할 학생의 이름, 과목 이름, 성적(A+, A, F 등)을 띄어쓰기로 구분하여 차례로 작성해주세요.")
-        print("입력예) Mickey Swift A+")
-        print("만약에 학생의 성적 중 해당 과목이 존재하면 기존 점수가 갱신됩니다.")
-        let inputs = (readLine() ?? " ").components(separatedBy: " ")
-        guard inputs.count == 3 else {
-            print("입력이 잘못되었습니다. 다시 확인해주세요.")
-            return
+    private func updateGrade() throws {
+        print(InformText.requestUpdateGrade)
+        
+        guard let inputs = readLine()?.components(separatedBy: " "),
+                  inputs.count == 3 else {
+            throw ManagerError.wrongInput
         }
-        let (name, subjectName, subjectGrade) = (inputs[0], inputs[1], inputs[2])
+        
+        let (name, subject) = (inputs[0], Subject(name: inputs[1], grade: inputs[2]))
+        
         guard students[name] != nil else {
-            print("\(name) 학생을 찾지 못했습니다.")
-            return
+            throw ManagerError.notFoundInput(name: name)
         }
-        students[name]?.append(Subject(name: subjectName, grade: subjectGrade))
-        print("\(name) 학생의 \(subjectName) 과목이 \(subjectGrade)로 추가(변경)되었습니다.")
+        
+        students[name]?.append(subject)
+        print(InformText.completeUpdateGrade(name: name, subject: subject))
     }
     
     private func deleteGrade() {
