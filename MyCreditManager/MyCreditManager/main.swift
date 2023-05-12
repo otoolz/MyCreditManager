@@ -14,11 +14,13 @@ struct Subject: Equatable {
 enum ManagerError: Error, CustomDebugStringConvertible {
     case wrongInput
     case duplicatedInput(name: String)
+    case notFoundInput(name: String)
     
     var debugDescription: String {
         switch self {
         case .wrongInput: return "입력이 잘못되었습니다. 다시 확인해주세요."
         case .duplicatedInput(let name): return "\(name)은 이미 존재하는 학생입니다. 추가하지 않습니다."
+        case .notFoundInput(let name): return "\(name) 학생을 찾지 못했습니다."
         }
     }
 }
@@ -27,10 +29,15 @@ enum InformText: CustomStringConvertible {
     case requestAddStudentName
     case completeAddStudent(name: String)
     
+    case requestDeleteStudentName
+    case completeDeleteStudent(name: String)
+    
     var description: String {
         switch self {
         case .requestAddStudentName: return "추가할 학생의 이름을 입력해주세요."
         case .completeAddStudent(let name): return "\(name) 학생을 추가했습니다."
+        case .requestDeleteStudentName: return "삭제할 학생의 이름을 입력해주세요."
+        case .completeDeleteStudent(let name): return "\(name) 학생을 삭제하였습니다."
         }
     }
 }
@@ -47,7 +54,10 @@ class MyCreditManager {
                 do { try addStudent() } catch {
                     print(error)
                 }
-            case "2" : deleteStudent()
+            case "2" :
+                do { try deleteStudent() } catch {
+                    print(error)
+                }
             case "3" : updateGrade()
             case "4" : deleteGrade()
             case "5" : checkGrade()
@@ -79,14 +89,19 @@ class MyCreditManager {
         print(InformText.completeAddStudent(name: name))
     }
     
-    private func deleteStudent() {
-        print("삭제할 학생의 이름을 입력해주세요.")
-        let name = readLine() ?? " "
-        guard students[name] != nil else {
-            return
+    private func deleteStudent() throws {
+        print(InformText.requestDeleteStudentName)
+        
+        guard let name = readLine() else {
+            throw ManagerError.wrongInput
         }
+        
+        guard students[name] != nil else {
+            throw ManagerError.notFoundInput(name: name)
+        }
+        
         students[name] = nil
-        print("\(name) 학생을 삭제하였습니다.")
+        print(InformText.completeDeleteStudent(name: name))
     }
     
     private func updateGrade() {
