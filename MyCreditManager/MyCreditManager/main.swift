@@ -11,51 +11,6 @@ struct Subject: Equatable {
     var name: String
     var grade: String
 }
-enum ManagerError: Error, CustomDebugStringConvertible {
-    case wrongInput
-    case duplicatedInput(name: String)
-    case notFoundInput(name: String)
-    
-    var debugDescription: String {
-        switch self {
-        case .wrongInput: return "입력이 잘못되었습니다. 다시 확인해주세요."
-        case .duplicatedInput(let name): return "\(name)은 이미 존재하는 학생입니다. 추가하지 않습니다."
-        case .notFoundInput(let name): return "\(name) 학생을 찾지 못했습니다."
-        }
-    }
-}
-
-enum InformText: CustomStringConvertible {
-    case requestAddStudentName
-    case completeAddStudent(name: String)
-    
-    case requestDeleteStudentName
-    case completeDeleteStudent(name: String)
-    
-    case requestUpdateGrade
-    case completeUpdateGrade(name: String, subject: Subject)
-    
-    var description: String {
-        switch self {
-        case .requestAddStudentName:
-            return "추가할 학생의 이름을 입력해주세요."
-        case .completeAddStudent(let name):
-            return "\(name) 학생을 추가했습니다."
-        case .requestDeleteStudentName:
-            return "삭제할 학생의 이름을 입력해주세요."
-        case .completeDeleteStudent(let name):
-            return "\(name) 학생을 삭제하였습니다."
-        case .requestUpdateGrade:
-            return """
-성적을 추가할 학생의 이름, 과목 이름, 성적(A+, A, F 등)을 띄어쓰기로 구분하여 차례로 작성해주세요.
-입력예) Mickey Swift A+
-만약에 학생의 성적 중 해당 과목이 존재하면 기존 점수가 갱신됩니다.
-"""
-        case .completeUpdateGrade(let name, let subject):
-            return "\(name) 학생의 \(subject.name) 과목이 \(subject.grade)로 추가(변경)되었습니다."
-        }
-    }
-}
 
 class MyCreditManager {
     
@@ -77,7 +32,10 @@ class MyCreditManager {
                 do { try updateGrade() } catch {
                     print(error)
                 }
-            case "4" : deleteGrade()
+            case "4" :
+                do { try deleteGrade() } catch {
+                    print(error)
+                }
             case "5" : checkGrade()
             case "X" : exitProgram()
             default : warnWrongMenu()
@@ -115,7 +73,7 @@ class MyCreditManager {
         }
         
         guard students[name] != nil else {
-            throw ManagerError.notFoundInput(name: name)
+            throw ManagerError.notFoundStudent(name: name)
         }
         
         students[name] = nil
@@ -133,33 +91,33 @@ class MyCreditManager {
         let (name, subject) = (inputs[0], Subject(name: inputs[1], grade: inputs[2]))
         
         guard students[name] != nil else {
-            throw ManagerError.notFoundInput(name: name)
+            throw ManagerError.notFoundStudent(name: name)
         }
         
         students[name]?.append(subject)
         print(InformText.completeUpdateGrade(name: name, subject: subject))
     }
     
-    private func deleteGrade() {
-        print("성적을 삭제할 학생의 이름, 과목 이름을 띄어쓰기로 구분하여 차례로 작성해주세요.")
-        print("입력예) Mickey Swift")
-        let inputs = (readLine() ?? " ").components(separatedBy: " ")
-        guard inputs.count == 2 else {
-            print("입력이 잘못되었습니다. 다시 확인해주세요.")
-            return
+    private func deleteGrade() throws {
+        print(InformText.requestDeleteGrade)
+        
+        guard let inputs = readLine()?.components(separatedBy: " "),
+              inputs.count == 2 else {
+            throw ManagerError.wrongInput
         }
+        
         let (name, subjectName) = (inputs[0], inputs[1])
         
         guard students[name] != nil else {
-            print("\(name) 학생을 찾지 못했습니다.")
-            return
+            throw ManagerError.notFoundStudent(name: name)
         }
-        guard let index = students[name]?.firstIndex(where: {$0.name == subjectName}) else {
-            print("\(name) 학생의 \(subjectName) 과목의 성적은 찾지 못했습니다.")
-            return
+        
+        guard let index = students[name]?.firstIndex(where: { $0.name == subjectName }) else {
+            throw ManagerError.notFoundSubject(name: name, subjectName: subjectName)
         }
+        
         students[name]?.remove(at: index)
-        print("\(name) 학생의 \(subjectName) 과목의 성적이 삭제되었습니다.")
+        print(InformText.completeDeleteGrade(name: name, subjectName: subjectName))
     }
     
     private func checkGrade() {
