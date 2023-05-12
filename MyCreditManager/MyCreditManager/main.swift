@@ -11,17 +11,42 @@ struct Subject: Equatable {
     var name: String
     var grade: String
 }
+enum ManagerError: Error, CustomDebugStringConvertible {
+    case wrongInput
+    case duplicatedInput(name: String)
+    
+    var debugDescription: String {
+        switch self {
+        case .wrongInput: return "입력이 잘못되었습니다. 다시 확인해주세요."
+        case .duplicatedInput(let name): return "\(name)은 이미 존재하는 학생입니다. 추가하지 않습니다."
+        }
+    }
+}
+
+enum InformText: CustomStringConvertible {
+    case requestAddStudentName
+    case completeAddStudent(name: String)
+    
+    var description: String {
+        switch self {
+        case .requestAddStudentName: return "추가할 학생의 이름을 입력해주세요."
+        case .completeAddStudent(let name): return "\(name) 학생을 추가했습니다."
+        }
+    }
+}
 
 class MyCreditManager {
     
     private var isRunning = true
-    private var answerMenu = ""
     private var students: [String : [Subject]] = [:]
     
     func run() {
         while isRunning {
             switch self.getMenu() {
-            case "1" : addStudent()
+            case "1" :
+                do { try addStudent() } catch {
+                    print(error)
+                }
             case "2" : deleteStudent()
             case "3" : updateGrade()
             case "4" : deleteGrade()
@@ -38,20 +63,20 @@ class MyCreditManager {
         return readLine() ?? "0"
     }
     
-    private func addStudent() {
-        print("추가할 학생의 이름을 입력해주세요.")
-        let name = readLine() ?? " "
+    private func addStudent() throws {
+        print(InformText.requestAddStudentName)
         
-        guard !name.contains(" ") else {
-            print("입력이 잘못되었습니다. 다시 확인해주세요.")
-            return
+        guard let name = readLine(),
+              name.contains(" ") == false else {
+            throw ManagerError.wrongInput
         }
+        
         guard students[name] == nil else {
-            print("\(name)은 이미 존재하는 학생입니다. 추가하지 않습니다.")
-            return
+            throw ManagerError.duplicatedInput(name: name)
         }
+        
         students[name] = []
-        print("\(name) 학생을 추가했습니다.")
+        print(InformText.completeAddStudent(name: name))
     }
     
     private func deleteStudent() {
